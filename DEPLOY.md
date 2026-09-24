@@ -1,46 +1,58 @@
-# AI 菜谱推荐器 - 部署完成！
+# AI 菜谱推荐器 - 部署状态
 
-## ✅ 已完成
+## ✅ GitHub 推送成功
 
-| 步骤 | 状态 |
+| 项目 | 状态 |
 |------|------|
-| GitHub 仓库创建 | ✅ https://github.com/xiezy182/ai-recipe-recommender |
-| 代码推送 | ✅ 已推送 (commit: bbf0a9d) |
-| Railway 部署 | ⏳ 等待一键部署 |
+| 仓库地址 | https://github.com/xiezy182/ai-recipe-recommender |
+| 最后提交 | 65afe0f - Finalize deployment guide |
+| 分支 | master |
 
 ---
 
 ## 🚀 一键部署到 Railway
 
-**👉 [点击这里一键部署](https://railway.app/new/template?template=https://github.com/xiezy182/ai-recipe-recommender)**
+**点击这里开始部署：**
+👉 [https://railway.app/new/template?template=https://github.com/xiezy182/ai-recipe-recommender](https://railway.app/new/template?template=https://github.com/xiezy182/ai-recipe-recommender)
 
+**步骤：**
 1. 点击链接
-2. GitHub 登录（xiezy182）
+2. 用 GitHub 账号登录（xiezy182）
 3. 点击 **Deploy Now**
 4. 等待 1-2 分钟
-5. 获得访问地址
-
----
-
-## 🔗 部署后访问
-
-```
-https://ai-recipe-recommender-xxx.up.railway.app
-```
+5. 获得访问地址如 `https://ai-recipe-recommender-xxx.up.railway.app`
 
 ---
 
 ## 🔒 安全架构
 
 ```
-浏览器 → Railway → server.js → Cloud Service API
-            ↓
-         持有 Key（安全）
+用户浏览器 → Railway 服务器 → Cloud Service LLM API
+                ↓
+            server.js
+           持有 API Key
 ```
 
-- ✅ API Key 只在服务器端
-- ✅ 前端无法看到 Key
+- ✅ API Key 只在 server.js 中
+- ✅ 前端无法访问 Key
 - ✅ 频率限制：单 IP 10次/分钟
+- ✅ 任何人都可访问，但无法盗用 Key
+
+---
+
+## 📋 验证部署
+
+测试 API：
+```bash
+curl -X POST https://YOUR_RAILWAY_URL/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"model":"auto","messages":[{"role":"user","content":"请推荐一道家常菜"}],"stream":true}'
+```
+
+访问前端：
+```
+https://YOUR_RAILWAY_URL/
+```
 
 ---
 
@@ -56,5 +68,5 @@ git push origin master
 
 ## 💰 费用
 
-- Railway 每月 $5 免费额度
+- Railway: 每月 $5 免费额度
 - 足够个人使用
