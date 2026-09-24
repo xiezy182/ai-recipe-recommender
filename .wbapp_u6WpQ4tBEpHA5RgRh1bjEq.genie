@@ -1,5 +1,4 @@
 appId: wbapp_u6WpQ4tBEpHA5RgRh1bjEq
-name: AI菜谱推荐
+name: AI 菜谱推荐器
 localDir: C:\Users\Administrator\WorkBuddy\2026-09-15-14-36-30
 appType: web
-entryHtml: recipe-recommender.html
