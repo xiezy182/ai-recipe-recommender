@@ -1,6 +1,6 @@
-# AI 菜谱推荐器 - 部署成功！
+# AI 菜谱推荐器 - 部署完成！
 
-## ✅ 部署完成
+## ✅ 部署成功
 
 | 项目 | 状态 |
 |------|------|
@@ -38,10 +38,3 @@ git add -A
 git commit -m "更新说明"
 git push origin master
 ```
-
----
-
-## 💰 费用
-
-- WorkBuddy 云服务：已包含在订阅中
-- LLM 调用：正常消耗 Cloud Service 额度
