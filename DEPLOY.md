@@ -1,59 +1,34 @@
-# AI 菜谱推荐器 - 手动部署指南
+# AI 菜谱推荐器 - 部署状态：GitHub 已推送 ✅
 
-## 📦 部署文件清单
+## 📦 当前状态
 
-项目目录 `C:\Users\Administrator\WorkBuddy\2026-09-15-14-36-30\` 下已有以下文件：
+| 步骤 | 状态 |
+|------|------|
+| GitHub 仓库创建 | ✅ 已完成 |
+| 代码推送 | ✅ 已完成 |
+| Railway 部署 | ⏳ 等待手动操作 |
 
-```
-├── server.js          # Node.js 代理服务器（含 API Key）✅
-├── recipe-recommender.html  # 前端页面（无 Key）✅
-├── package.json       # Node.js 配置 ✅
-├── railway.json       # Railway 部署配置 ✅
-├── .gitignore         # Git 忽略规则 ✅
-└── .railwayignore     # Railway 忽略规则 ✅
-```
+**GitHub 仓库**: https://github.com/xiezy182/ai-recipe-recommender
 
 ---
 
-## 🚀 方式一：Railway 部署（推荐）
+## 🚀 下一步：部署到 Railway
 
-### 步骤 1：创建 GitHub 仓库
+Railway CLI 未安装，请手动完成部署：
 
-1. 打开 https://github.com/new
-2. 仓库名称：`ai-recipe-recommender`
-3. 选择 **Public**（公开）
-4. 勾选 **Add a README file**
-5. 点击 **Create repository**
-
-### 步骤 2：推送代码
-
-在命令行执行：
-
-```bash
-cd C:\Users\Administrator\WorkBuddy\2026-09-15-14-36-30
-
-# 添加远程仓库（替换 YOUR_TOKEN 为你的 GitHub Personal Access Token）
-git remote add origin https://YOUR_TOKEN@github.com/xiezhiying/ai-recipe-recommender.git
-
-# 推送代码
-git push -u origin master
-```
-
-**获取 GitHub Personal Access Token：**
-1. 打开 https://github.com/settings/tokens
-2. 点击 **Generate new token (classic)**
-3. 勾选 `repo` 权限
-4. 点击 **Generate token**
-5. 复制生成的 token（只显示一次！）
-
-### 步骤 3：部署到 Railway
+### Railway 部署步骤
 
 1. 打开 https://railway.app
-2. 用 GitHub 账号登录
+2. 用 GitHub 账号登录（`xiezy182`）
 3. 点击 **New Project** → **Deploy from GitHub repo**
-4. 选择 `xiezhiying/ai-recipe-recommender`
-5. Railway 会自动检测并部署（无需任何配置）
-6. 等待部署完成，获得域名如 `https://ai-recipe-recommender.up.railway.app`
+4. 选择 `ai-recipe-recommender` 仓库
+5. Railway 会自动检测 Node.js 并部署
+6. 等待部署完成，获得域名如 `https://ai-recipe-recommender-xxx.up.railway.app`
+
+### 设置环境变量
+
+部署成功后，在 Railway 项目设置中添加：
+- 无需额外环境变量（API Key 已硬编码在 server.js 中）
 
 ---
 
