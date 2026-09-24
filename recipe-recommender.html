@@ -662,12 +662,133 @@
     btn.textContent = loading ? '生成中…' : '搜一搜';
   }
 
-  // --- Parse AI response ---
+  // --- Parse AI response (JSON or Markdown) ---
   function parseResponse(text) {
     text = text.trim();
+
+    // 1. Try direct JSON parse first
     var jsonMatch = text.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    try { return JSON.parse(jsonMatch[0]); } catch(e) { return null; }
+    if (jsonMatch) {
+      try { return JSON.parse(jsonMatch[0]); } catch(e) {}
+    }
+
+    // 2. Try parsing Markdown-formatted recipe
+    return parseMarkdownRecipe(text);
+  }
+
+  // Parse Markdown recipe format into JSON array
+  function parseMarkdownRecipe(text) {
+    var recipes = [];
+    var lines = text.split('\n');
+    var currentRecipe = null;
+    var currentSection = null;
+    var sectionBuffer = [];
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+
+      // Skip empty lines and code fences
+      if (!line || line.startsWith('```')) continue;
+
+      // Detect recipe title (H1 or H2 heading)
+      if (line.match(/^#+\s*.+/) || line.match(/^\d+\.\s*.+$/) || (line.match(/^[^#\d][^-*~][\w\s]{3,}$/) && !line.includes(':') && !line.includes('-') && line.length < 80)) {
+        // Save previous recipe
+        if (currentRecipe) {
+          recipes.push(currentRecipe);
+        }
+        // Start new recipe
+        currentRecipe = {
+          title: line.replace(/^#+\s*/, '').replace(/^\d+\.\s*/, ''),
+          description: '',
+          difficulty: '',
+          time: '',
+          portions: '',
+          tags: [],
+          ingredients: [],
+          steps: [],
+          tips: ''
+        };
+        currentSection = null;
+        sectionBuffer = [];
+        continue;
+      }
+
+      // Skip if no recipe started
+      if (!currentRecipe) continue;
+
+      // Detect section headers
+      if (line.match(/^#{2,}\s*(食材|配料|ingredients?)/i)) {
+        currentSection = 'ingredients';
+        continue;
+      }
+      if (line.match(/^#{2,}\s*(步骤|做法|instructions?|directions?)/i)) {
+        currentSection = 'steps';
+        continue;
+      }
+      if (line.match(/^#{2,}\s*(小贴士|提示|tips?|notes?)/i)) {
+        currentSection = 'tips';
+        continue;
+      }
+      if (line.match(/^#{2,}\s*(难度|时间|份量|difficulty|time|servings)/i)) {
+        // Extract metadata from header line
+        var metaMatch = line.match(/([^:：]+)[:：]?(.*)/);
+        if (metaMatch) {
+          var key = metaMatch[1].trim().toLowerCase();
+          var val = metaMatch[2].trim();
+          if (key.indexOf('时间') !== -1 || key.indexOf('time') !== -1) currentRecipe.time = val;
+          if (key.indexOf('难度') !== -1 || key.indexOf('difficulty') !== -1) currentRecipe.difficulty = val;
+          if (key.indexOf('份') !== -1 || key.indexOf('portion') !== -1 || key.indexOf('serving') !== -1) currentRecipe.portions = val;
+        }
+        continue;
+      }
+
+      // Parse content based on current section
+      if (currentSection === 'ingredients') {
+        // Handle list items: - item, * item, 1. item
+        var ingMatch = line.match(/^[-*]\s+(.+?)\s*[:：]\s*(.+)$/);
+        if (ingMatch) {
+          currentRecipe.ingredients.push({ name: ingMatch[1].trim(), amount: ingMatch[2].trim() });
+        } else {
+          ingMatch = line.match(/^[-*]\s+(.+)/);
+          if (ingMatch) {
+            currentRecipe.ingredients.push({ name: ingMatch[1].trim(), amount: '' });
+          }
+        }
+      } else if (currentSection === 'steps') {
+        var stepMatch = line.match(/^(?:\d+\.?\s*)?(.+)/);
+        if (stepMatch) {
+          currentRecipe.steps.push(stepMatch[1].trim());
+        }
+      } else if (currentSection === 'tips') {
+        var tipMatch = line.match(/^-?\s*(.+)$/);
+        if (tipMatch) {
+          sectionBuffer.push(tipMatch[1].trim());
+        }
+      }
+    }
+
+    // Don't forget the last recipe
+    if (currentRecipe) {
+      currentRecipe.tips = sectionBuffer.join(' ');
+      recipes.push(currentRecipe);
+    }
+
+    // If no structured recipes found, try to create one from the whole text
+    if (recipes.length === 0 && text.length > 10) {
+      recipes.push({
+        title: '推荐菜谱',
+        description: text.substring(0, 100),
+        difficulty: '',
+        time: '',
+        portions: '',
+        tags: [],
+        ingredients: [],
+        steps: [],
+        tips: text.substring(100)
+      });
+    }
+
+    return recipes.length > 0 ? recipes : null;
   }
 
   function escapeHtml(str) {

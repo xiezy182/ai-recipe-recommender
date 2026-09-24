@@ -104,7 +104,7 @@ function proxyToCloudService(req, res) {
     }
   }
 
-  // 强制 stream: true（Cloud Service LLM API 要求）
+  // 强制 stream: true（Cloud Service API 要求）
   body.stream = true;
 
   const forwardReq = https.request(
@@ -181,7 +181,7 @@ function serveStatic(res) {
 function sendJson(res, status, data) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
-    'X-Content-Type-Options': 'nosniff',
+    'X-Content-Type-Options': 'nosnim',
   });
   res.end(JSON.stringify(data));
 }
