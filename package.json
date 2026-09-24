@@ -1,0 +1,13 @@
+{
+  "name": "ai-recipe-recommender",
+  "version": "1.0.0",
+  "description": "AI 菜谱推荐器 - 安全代理服务器",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["recipe", "ai", "cooking"],
+  "author": "",
+  "license": "MIT"
+}
