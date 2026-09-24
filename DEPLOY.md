@@ -23,7 +23,7 @@ Railway CLI 未安装，请手动完成部署：
 3. 点击 **New Project** → **Deploy from GitHub repo**
 4. 选择 `ai-recipe-recommender` 仓库
 5. Railway 会自动检测 Node.js 并部署
-6. 等待部署完成，获得域名如 `https://ai-recipe-recommender-xxx.up.railway.app`
+6. 等待部署完成，获得域名如 `https://ai-recipe-recommender.up.railway.app`
 
 ### 设置环境变量
 
