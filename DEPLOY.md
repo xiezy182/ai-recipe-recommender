@@ -1,126 +1,143 @@
-# AI 菜谱推荐器 - Railway 部署指南
+# AI 菜谱推荐器 - 手动部署指南
 
-## 项目结构
+## 📦 部署文件清单
 
-```
-recipe-recommender/
-├── server.js          # Node.js 代理服务器（含 API Key）
-├── recipe-recommender.html  # 前端页面（无 Key）
-├── package.json       # Node.js 依赖配置
-├── railway.json       # Railway 部署配置
-├── .gitignore         # Git 忽略规则
-└── .railwayignore     # Railway 忽略规则
-```
-
-## 安全架构
+项目目录 `C:\Users\Administrator\WorkBuddy\2026-09-15-14-36-30\` 下已有以下文件：
 
 ```
-浏览器 → /api/chat (代理) → Node.js 持有 key → Cloud Service LLM API
-         (无 key)                (转发请求，返回结果)
+├── server.js          # Node.js 代理服务器（含 API Key）✅
+├── recipe-recommender.html  # 前端页面（无 Key）✅
+├── package.json       # Node.js 配置 ✅
+├── railway.json       # Railway 部署配置 ✅
+├── .gitignore         # Git 忽略规则 ✅
+└── .railwayignore     # Railway 忽略规则 ✅
 ```
-
-**关键安全措施：**
-- ✅ API Key 只存在于服务端，前端完全无感知
-- ✅ 请求频率限制（单 IP 每分钟最多 10 次）
-- ✅ 输入参数校验（防止注入）
-- ✅ 响应体大小限制（防大体积消耗积分）
 
 ---
 
-## 部署到 Railway（免费）
+## 🚀 方式一：Railway 部署（推荐）
 
-### 步骤 1：创建 Railway 账号
+### 步骤 1：创建 GitHub 仓库
 
-1. 访问 https://railway.app
+1. 打开 https://github.com/new
+2. 仓库名称：`ai-recipe-recommender`
+3. 选择 **Public**（公开）
+4. 勾选 **Add a README file**
+5. 点击 **Create repository**
+
+### 步骤 2：推送代码
+
+在命令行执行：
+
+```bash
+cd C:\Users\Administrator\WorkBuddy\2026-09-15-14-36-30
+
+# 添加远程仓库（替换 YOUR_TOKEN 为你的 GitHub Personal Access Token）
+git remote add origin https://YOUR_TOKEN@github.com/xiezhiying/ai-recipe-recommender.git
+
+# 推送代码
+git push -u origin master
+```
+
+**获取 GitHub Personal Access Token：**
+1. 打开 https://github.com/settings/tokens
+2. 点击 **Generate new token (classic)**
+3. 勾选 `repo` 权限
+4. 点击 **Generate token**
+5. 复制生成的 token（只显示一次！）
+
+### 步骤 3：部署到 Railway
+
+1. 打开 https://railway.app
 2. 用 GitHub 账号登录
-
-### 步骤 2：从 GitHub 部署（推荐）
-
-```bash
-# 1. 在 GitHub 创建新仓库（私有或公开均可）
-# 2. 推送代码到 GitHub
-git remote add origin https://github.com/YOUR_USERNAME/ai-recipe-recommender.git
-git push -u origin main
-
-# 3. 在 Railway 连接 GitHub 仓库
-#    - 登录 https://railway.app
-#    - 点击 "New Project" → "Deploy from GitHub repo"
-#    - 选择刚创建的仓库
-```
-
-### 步骤 3：配置环境变量（可选）
-
-Railway 会自动读取 `package.json` 中的 `start` 脚本，无需额外配置。
-
-API Key 已硬编码在 `server.js` 中（这是必要的安全风险接受点）。
-
-### 步骤 4：等待部署完成
-
-Railway 会自动：
-- 安装依赖（无需 node_modules）
-- 启动服务器
-- 分配域名（如 `https://xxx-xxx.up.railway.app`）
+3. 点击 **New Project** → **Deploy from GitHub repo**
+4. 选择 `xiezhiying/ai-recipe-recommender`
+5. Railway 会自动检测并部署（无需任何配置）
+6. 等待部署完成，获得域名如 `https://ai-recipe-recommender.up.railway.app`
 
 ---
 
-## 验证部署
+## 🚀 方式二：Render 部署
 
-部署完成后，测试 API：
+1. 注册 https://render.com
+2. 点击 **New** → **Public Website**
+3. 连接 GitHub 仓库
+4. 配置：
+   - Build Command: `npm install`
+   - Start Command: `node server.js`
+5. 点击 **Create Service**
+
+---
+
+## 🚀 方式三：本地运行测试
 
 ```bash
-curl -X POST https://YOUR_RAILWAY_APP_URL/api/chat \
+# 在项目目录运行
+cd C:\Users\Administrator\WorkBuddy\2026-09-15-14-36-30
+node server.js
+
+# 浏览器访问
+http://localhost:3000
+```
+
+---
+
+## 🔒 安全说明
+
+部署后：
+- ✅ **API Key 只在服务器端**（server.js 中）
+- ✅ **前端页面无法看到 Key**
+- ✅ **任何人都可以访问，但无法盗用 Key**
+- ✅ **频率限制**：单 IP 每分钟最多 10 次请求
+
+---
+
+## ✅ 验证部署
+
+部署成功后，测试 API：
+
+```bash
+curl -X POST https://YOUR_DEPLOYED_URL/api/chat \
   -H "Content-Type: application/json" \
-  -d '{"model":"auto","messages":[{"role":"user","content":"测试"}],"stream":true}'
+  -d '{"model":"auto","messages":[{"role":"user","content":"请推荐一道家常菜"}],"stream":true}'
 ```
 
 访问前端页面：
 ```
-https://YOUR_RAILWAY_APP_URL/
+https://YOUR_DEPLOYED_URL/
 ```
 
 ---
 
-## 费用说明
+## 📝 更新部署
 
-**Railway 免费额度：**
-- 每月 $5 免费额度
-- 本项目月耗约 $0.1-0.5（取决于使用量）
-- 超出后按用量计费，最低约 $5/月
-
----
-
-## 本地测试
+修改代码后，推送新提交即可自动重新部署：
 
 ```bash
-# 安装依赖（本项目无外部依赖，直接运行）
-node server.js
-
-# 访问
-open http://localhost:3000
+git add -A
+git commit -m "更新说明"
+git push origin master
 ```
 
 ---
 
-## 故障排查
+## 💰 费用
 
-**问题：状态栏显示"AI就绪"但无法生成菜谱**
-- 检查网络连接
-- 查看 Railway 日志：`railway logs`
-
-**问题：404 Not Found**
-- 确认部署成功
-- 检查 URL 是否正确
-
-**问题：Key 被盗用**
-- 立即重置 Cloud Service 的 Access Key
-- 重新部署更新后的 server.js
+- **Railway**: 每月 $5 免费额度（足够个人使用）
+- **Render**: 免费 tier（有休眠，首次访问慢 30 秒）
+- **本地运行**: 免费
 
 ---
 
-## 下一步优化建议
+## 🆘 故障排查
 
-1. **添加请求日志**：记录 API 调用次数和错误
-2. **动态模型选择**：支持用户选择不同的 AI 模型
-3. **缓存机制**：缓存常用菜谱结果，减少 API 调用
-4. **数据库存储**：保存用户生成的菜谱历史
-5. **自定义主题**：支持用户选择 UI 颜色主题
+**问题：状态栏显示"AI就绪"但无法生成菜谱**
+- 检查 Railway/Render 日志
+- 确认 Cloud Service 积分充足
+
+**问题：404 Not Found**
+- 确认 URL 正确（应该是 `/api/chat` 不是 `/.cloud/llm/`）
+
+**问题：Key 泄露风险**
+- 立即重置 Cloud Service 的 Access Key
+- 重新部署更新后的 server.js
