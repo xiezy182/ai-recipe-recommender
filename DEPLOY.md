@@ -12,14 +12,19 @@
 
 ---
 
-## 🚀 部署到 Railway（只需 1 分钟）
+## 🚀 一键部署到 Railway（只需 1 分钟）
 
-### 方式一：一键部署（推荐）
+### 方式一：一键部署链接
 
-1. 打开这个链接：https://railway.app/new/template?template=https://github.com/xiezy182/ai-recipe-recommender
-2. 点击 **Deploy Now**
-3. 等待部署完成（约 1-2 分钟）
-4. 获得访问地址如 `https://ai-recipe-recommender-xxx.up.railway.app`
+点击以下链接，自动完成部署：
+
+**👉 [点击这里一键部署到 Railway](https://railway.app/new/template?template=https://github.com/xiezy182/ai-recipe-recommender)**
+
+1. 点击链接
+2. 用 GitHub 账号登录（如果未登录）
+3. 点击 **Deploy Now**
+4. 等待 1-2 分钟
+5. 获得访问地址如 `https://ai-recipe-recommender-xxx.up.railway.app`
 
 ### 方式二：手动部署
 
@@ -27,7 +32,7 @@
 2. 用 GitHub 账号登录
 3. 点击 **New Project** → **Deploy from GitHub repo**
 4. 搜索并选择 `ai-recipe-recommender`
-5. Railway 会自动检测并部署
+5. Railway 会自动检测 Node.js 并部署
 6. 等待完成，复制生成的 URL
 
 ---
