@@ -586,7 +586,7 @@
       }, 60000);
 
       var answer = '';
-      cloudFetch('/chat/completions', {
+      cloudFetch('/chat', {
         method: 'POST',
         body: JSON.stringify({
           model: currentModel.id,
