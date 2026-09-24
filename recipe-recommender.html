@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>菜谱推荐 · AI灵感厨房</title>
+<style>
+  :root {
+    --orange: #FF6B35;
+    --orange-light: #FFF3EC;
+    --cream: #FDF8F4;
+    --brown: #5C4033;
+    --brown-light: #8B6F4E;
+    --gray: #666;
+    --gray-light: #999;
+    --border: #E8DDD4;
+    --white: #ffffff;
+    --shadow: 0 2px 12px rgba(92,64,51,0.08);
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--cream);
+    color: var(--brown);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(92,64,51,0.06);
+  }
+  .header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brown);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--orange);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo span { color: var(--orange); }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+  .status-dot.ok { background: #52c41a; }
+  .status-dot.err { background: #f5222d; }
+  .status-dot.wait { background: #faad14; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .hero {
+    background: linear-gradient(135deg, #FFF3EC 0%, #FDF8F4 100%);
+    padding: 48px 20px 40px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 28px; font-weight: 700; color: var(--brown); margin-bottom: 8px; }
+  .hero p { color: var(--gray); font-size: 15px; margin-bottom: 28px; }
+  .search-box {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    border-radius: 50px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus-within { border-color: var(--orange); }
+  .search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 16px 24px;
+    font-size: 16px;
+    background: var(--white);
+    color: var(--brown);
+  }
+  .search-box input::placeholder { color: var(--gray-light); }
+  .search-box button {
+    background: var(--orange);
+    border: none;
+    color: white;
+    padding: 16px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 0 48px 48px 0;
+  }
+  .search-box button:hover { background: #e85a24; }
+  .search-box button:disabled { background: #ccc; cursor: not-allowed; }
+
+  .quick-suggest {
+    max-width: 960px;
+    margin: 0 auto 8px;
+    padding: 0 20px;
+  }
+  .quick-suggest p { font-size: 13px; color: var(--gray-light); margin-bottom: 10px; }
+  .quick-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .quick-chip {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 13px;
+    color: var(--brown-light);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .quick-chip:hover { border-color: var(--orange); color: var(--orange); }
+
+  .tags-section {
+    max-width: 960px;
+    margin: 20px auto 0;
+    padding: 0 20px;
+  }
+  .tags-label { font-size: 13px; color: var(--gray-light); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 14px;
+    color: var(--brown);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tag:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-light); }
+  .tag.active { background: var(--orange); color: white; border-color: var(--orange); }
+
+  .results {
+    max-width: 960px;
+    margin: 28px auto;
+    padding: 0 20px;
+  }
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .results-title { font-size: 18px; font-weight: 600; }
+  .results-count { font-size: 13px; color: var(--gray-light); }
+
+  .recipe-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .recipe-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(92,64,51,0.12); }
+  .card-top { display: flex; }
+  .card-img {
+    width: 200px;
+    min-height: 160px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .card-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,107,53,0.15), transparent);
+  }
+  .card-body {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .card-title { font-size: 17px; font-weight: 700; color: var(--brown); line-height: 1.4; }
+  .card-desc { font-size: 13px; color: var(--gray); line-height: 1.7; flex: 1; }
+  .card-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+  .meta-item {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 12px; color: var(--gray-light);
+    background: var(--cream); padding: 4px 10px; border-radius: 12px;
+  }
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .card-tag { font-size: 11px; color: var(--orange); background: var(--orange-light); padding: 2px 8px; border-radius: 8px; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 16px;
+    max-width: 680px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal-hero {
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    border-radius: 16px 16px 0 0;
+  }
+  .modal-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5));
+    border-radius: 16px 16px 0 0;
+  }
+  .modal-close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    z-index: 1;
+  }
+  .modal-title-area {
+    position: absolute;
+    bottom: 16px; left: 24px;
+    z-index: 1;
+  }
+  .modal-title-area h2 { color: white; font-size: 24px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  .modal-content { padding: 24px; }
+  .modal-stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-pill {
+    background: var(--cream);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--brown);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .modal-section { margin-bottom: 20px; }
+  .modal-section h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--orange);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--orange-light);
+  }
+  .ingredient-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+  .ingredient-item {
+    font-size: 13px; color: var(--brown);
+    padding: 6px 10px; background: var(--cream); border-radius: 6px;
+  }
+  .step-list { list-style: none; }
+  .step-list li {
+    display: flex; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px; color: var(--brown);
+    line-height: 1.6;
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px;
+    background: var(--orange);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .loading-area { text-align: center; padding: 60px 20px; }
+  .loader {
+    width: 48px; height: 48px;
+    border: 4px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--gray-light); font-size: 14px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-light); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; }
+
+  .error-msg {
+    background: #FFF0EE;
+    border: 1px solid #FFCCCC;
+    color: #CC3333;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--gray-light);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+    background: var(--white);
+  }
+
+  @media (max-width: 640px) {
+    .card-top { flex-direction: column; }
+    .card-img { width: 100%; min-height: 140px; }
+    .hero h1 { font-size: 22px; }
+    .search-box { flex-direction: column; border-radius: 16px; }
+    .search-box button { border-radius: 0 0 14px 14px; padding: 14px; }
+    .modal-hero { height: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <div class="logo-icon">🍳</div>
+      AI<span>灵感厨房</span>
+    </a>
+    <div style="font-size:13px;color:var(--gray-light)" id="statusBar">
+      <span class="status-dot wait" id="statusDot"></span>初始化中…
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>今天吃什么？</h1>
+  <p>输入你想吃的食材或菜系，AI 为你现做菜谱</p>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="例：鸡蛋、番茄、川味、清淡..." autocomplete="off">
+    <button id="searchBtn">搜一搜</button>
+  </div>
+</div>
+
+<div class="quick-suggest">
+  <p>💡 试试这些：</p>
+  <div class="quick-chips">
+    <div class="quick-chip" data-q="红烧肉">🥩 红烧肉</div>
+    <div class="quick-chip" data-q="番茄炒蛋">🍅 番茄炒蛋</div>
+    <div class="quick-chip" data-q="快手家常菜">⚡ 快手家常菜</div>
+    <div class="quick-chip" data-q="减肥餐">🥗 减肥餐</div>
+    <div class="quick-chip" data-q="川菜">🌶️ 川菜</div>
+    <div class="quick-chip" data-q="宝宝辅食">👶 宝宝辅食</div>
+    <div class="quick-chip" data-q="汤">🍲 养生汤</div>
+    <div class="quick-chip" data-q="宵夜">🌙 宵夜</div>
+  </div>
+</div>
+
+<div class="tags-section">
+  <div class="tags-label">快捷筛选</div>
+  <div class="tags" id="tagsContainer">
+    <div class="tag" data-v="早餐">🌅 早餐</div>
+    <div class="tag" data-v="午餐">☀️ 午餐</div>
+    <div class="tag" data-v="晚餐">🌙 晚餐</div>
+    <div class="tag" data-v="快手">⚡ 快手菜</div>
+    <div class="tag" data-v="清淡">🥬 清淡</div>
+    <div class="tag" data-v="辣">🌶️ 辣味</div>
+    <div class="tag" data-v="汤">🍲 汤类</div>
+    <div class="tag" data-v="甜点">🍰 甜点</div>
+    <div class="tag" data-v="素">🥦 素食</div>
+    <div class="tag" data-v="荤">🍖 荤菜</div>
+  </div>
+</div>
+
+<div class="results" id="resultsArea">
+  <div class="empty-state">
+    <div class="icon">🍽️</div>
+    <p>告诉我你想做什么菜，AI 马上给你出菜谱</p>
+  </div>
+</div>
+
+<div class="footer">
+  AI灵感厨房 · 菜谱由 AI 实时生成 · 仅供參考
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-hero" id="modalHero">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div class="modal-title-area"><h2 id="modalTitle"></h2></div>
+    </div>
+    <div class="modal-content">
+      <div class="modal-stats" id="modalStats"></div>
+      <div class="modal-section">
+        <h3>🧾 食材清单</h3>
+        <div class="ingredient-list" id="modalIngredients"></div>
+      </div>
+      <div class="modal-section">
+        <h3>👨‍🍳 烹饪步骤</h3>
+        <ol class="step-list" id="modalSteps"></ol>
+      </div>
+      <div class="modal-section" id="modalTipsSection" style="display:none">
+        <h3>💡 小贴士</h3>
+        <p id="modalTips" style="font-size:14px;color:var(--gray);line-height:1.8"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // 服务端代理地址（key 保存在服务器，前端无感知）
+  var API_BASE = '/api';
+
+  // 模型和状态变量
+  var currentModel = null;
+  var isSearching = false;
+
+  var SYSTEM_PROMPT = [
+    '你是一位资深中餐厨师兼美食博主，擅长根据用户提供的食材和口味偏好生成详细实用的菜谱。',
+    '请严格按照以下JSON格式输出，不要输出任何其他内容：',
+    '{',
+    '  "title": "菜名",',
+    '  "description": "一句话介绍这道菜",',
+    '  "difficulty": "简单/中等/困难",',
+    '  "time": "总耗时，如30分钟",',
+    '  "portions": "适合几人食用",',
+    '  "tags": ["标签1","标签2"],',
+    '  "ingredients": [{"name":"食材名","amount":"用量"}],',
+    '  "steps": ["步骤1","步骤2","步骤3"],',
+    '  "tips": "烹饪小贴士（可选）"',
+    '}',
+    '要求：',
+    '1. 食材用量要具体（克/勺/个等）',
+    '2. 步骤要清晰可操作，不超过8步',
+    '3. 根据用户提到的口味偏好调整咸淡辣度',
+    '4. 必须一次生成3到5道不同的菜（根据用户输入的主题/关键词，围绕同一主题搭配出3-5道合理的家常菜组合），输出格式为JSON数组：[{...},{...}]',
+    '5. 只输出JSON，不要有任何其他文字说明'
+  ].join('\n');
+
+  // 菜系关键词 → 多张备选图（按标题匹配后随机选一张，保证每道菜图不同）
+  var _FOOD_SETS = {
+    '红烧': ['photo-1555126634-323283e090fa','photo-1567620905732-2d1ec7ab7445','photo-1606788356494-a5d0f8e80e65'],
+    '红烧肉': ['photo-1555126634-323283e090fa','photo-1567620905732-2d1ec7ab7445','photo-1606788356494-a5d0f8e80e65'],
+    '番茄': ['photo-1576045057995-568f588f82fb','photo-1600338093815-3f721a1d34a6','photo-1546069901-ba9599a7e63c'],
+    '番茄炒蛋': ['photo-1576045057995-568f588f82fb','photo-1600338093815-3f721a1d34a6','photo-1546069901-ba9599a7e63c'],
+    '蛋': ['photo-1482049016688-2d3e1b311543','photo-1525351484164-76be6e5b4e48','photo-1582722872445-44dc5f7e3c8f'],
+    '炒蛋': ['photo-1482049016688-2d3e1b311543','photo-1525351484164-76be6e5b4e48','photo-1582722872445-44dc5f7e3c8f'],
+    '肉': ['photo-1544025162-d76694265947','photo-1558030006-457478bedbae','photo-1603360946339-99b0b581186b'],
+    '鸡': ['photo-1598103442097-8b74394b95c6','photo-1626645738196-c2a7c87a851c','photo-1532550907401-a8997c31f36c'],
+    '鱼': ['photo-1519708227418-c8fd9a32b7a2','photo-1559827266-d9c3d7a0044a','photo-1545477784281-4c2b2a2c2e0a'],
+    '汤': ['photo-1547592180-85f173990554','photo-1603105037820-c8a7a6e43534','photo-1588125581004-0cb8f1c2aa67'],
+    '甜': ['photo-1551024601-bec78aea704b','photo-1563805042-7684c019e1cb','photo-1488477181941-9a69da73e870'],
+    '素': ['photo-1512621776951-a57141f2eefd','photo-1540420773420-3366772f4999','photo-1546069901-ba9599a7e63c'],
+    '辣': ['photo-1565557623262-b51c2513a641','photo-1529692237678-70de95c2b22d','photo-1567620905732-2d1ec7ab7445'],
+    '川': ['photo-1565557623262-b51c2513a641','photo-1582722872445-44dc5f7e3c8f','photo-1567620905732-2d1ec7ab7445'],
+    '粤': ['photo-1555126634-323283e090fa','photo-1567620905732-2d1ec7ab7445','photo-1598103442097-8b74394b95c6'],
+    '快': ['photo-1546069901-ba9599a7e63c','photo-1525351484164-76be6e5b4e48','photo-1482049016688-2d3e1b311543'],
+    '早餐': ['photo-1525351484164-76be6e5b4e48','photo-1482049016688-2d3e1b311543','photo-1582722872445-44dc5f7e3c8f'],
+    '减肥': ['photo-1546069901-ba9599a7e63c','photo-1512621776951-a57141f2eefd','photo-1540420773420-3366772f4999'],
+    '宵夜': ['photo-1567620905732-2d1ec7ab7445','photo-1603360946339-99b0b581186b','photo-1585032269383-5e7705c078f4'],
+    '辅食': ['photo-1546069901-ba9599a7e63c','photo-1547592180-85f173990554','photo-1588125581004-0cb8f1c2aa67'],
+    '豆腐': ['photo-1546069901-ba9599a7e63c','photo-1525351484164-76be6e5b4e48','photo-1540420773420-3366772f4999'],
+    '虾': ['photo-1559827266-d9c3d7a0044a','photo-1519708227418-c8fd9a32b7a2','photo-1555126634-323283e090fa'],
+    '牛': ['photo-1544025162-d76694265947','photo-1558030006-457478bedbae','photo-1603360946339-99b0b581186b'],
+    '猪': ['photo-1544025162-d76694265947','photo-1558030006-457478bedbae','photo-1603360946339-99b0b581186b'],
+    '面': ['photo-1567620905732-2d1ec7ab7445','photo-1476224203421-9ac39bcb3327','photo-1606788356494-a5d0f8e80e65'],
+    '饭': ['photo-1567620905732-2d1ec7ab7445','photo-1476224203421-9ac39bcb3327','photo-1565299624946-b28f40a0ae38'],
+    '凉': ['photo-1512621776951-a57141f2eefd','photo-1540420773420-3366772f4999','photo-1546069901-ba9599a7e63c'],
+    '粥': ['photo-1547592180-85f173990554','photo-1588125581004-0cb8f1c2aa67','photo-1603105037820-c8a7a6e43534'],
+  };
+  // 全局备选图（兜底）
+  var _FALLBACK = [
+    'photo-1495521821757-a1efb6729352','photo-1504674900247-0877df9cc836','photo-1540189549336-e6e99c3679fe',
+    'photo-1565299624946-b28f40a0ae38','photo-1567620905732-2d1ec7ab7445','photo-1476224203421-9ac39bcb3327',
+    'photo-1547592180-85f173990554','photo-1590779133107-5c2b4e867891','photo-1551024601-bec78aea704b',
+  ];
+
+  // 已用过的图片索引，确保同批菜谱图片不重复
+  var _usedImgIndices = [];
+
+  function getPlaceholder(title) {
+    var t = (title || '').toLowerCase();
+    var candidates = null;
+    // 优先按完整菜名匹配
+    for (var k in _FOOD_SETS) {
+      if (t.indexOf(k) !== -1) { candidates = _FOOD_SETS[k]; break; }
+    }
+    // 没有精确匹配，退而求其次
+    if (!candidates) {
+      var fallbackKeys = ['肉','鸡','鱼','蛋','汤','甜','素','辣','川','快','早餐','减肥','宵夜','豆腐','虾','牛','猪','面','饭','凉','粥'];
+      for (var i = 0; i < fallbackKeys.length; i++) {
+        if (t.indexOf(fallbackKeys[i]) !== -1 && _FOOD_SETS[fallbackKeys[i]]) {
+          candidates = _FOOD_SETS[fallbackKeys[i]]; break;
+        }
+      }
+    }
+    // 从池子里选一张，尽量不重复
+    var pool = candidates || _FALLBACK;
+    // 用标题字符串做种子，保证同一道菜每次图一样
+    var seed = 0;
+    for (var j = 0; j < t.length; j++) seed = (seed * 31 + t.charCodeAt(j)) >>> 0;
+    var idx = seed % pool.length;
+    // 如果池子里这张已经被同批用过，顺延到下一张
+    var attempts = 0;
+    while (_usedImgIndices.indexOf(idx) !== -1 && attempts < pool.length) {
+      idx = (idx + 1) % pool.length;
+      attempts++;
+    }
+    return 'https://images.unsplash.com/' + pool[idx] + '?w=400&h=300&fit=crop&q=80';
+  }
+
+  function clearUsedImages() {
+    _usedImgIndices = [];
+  }
+
+  // --- Status bar ---
+  function setStatus(text, type) {
+    var dot = document.getElementById('statusDot');
+    var bar = document.getElementById('statusBar');
+    dot.className = 'status-dot ' + type;
+    bar.innerHTML = '<span class="status-dot ' + type + '"></span>' + text;
+  }
+
+  // --- Init: 直接就绪，无需网络请求 ---
+  function init() {
+    currentModel = { id: 'auto', name: 'Auto' };
+    setStatus('AI就绪 (Auto)', 'ok');
+  }
+
+  // --- Fetch wrapper：通过服务端代理，key 不暴露给前端 ---
+  function cloudFetch(path, options) {
+    var headers = Object.assign({
+      'Content-Type': 'application/json'
+    }, (options && options.headers) || {});
+    return fetch(API_BASE + path, Object.assign({}, options, { headers: headers }));
+  }
+
+  // --- LLM chat (streaming) ---
+  function llmChat(prompt) {
+    return new Promise(function(resolve, reject) {
+      if (!currentModel) { reject(new Error('模型未就绪')); return; }
+      if (isSearching) { reject(new Error('请勿重复点击')); return; }
+      isSearching = true;
+      updateSearchBtn(true);
+
+      var controller = new AbortController();
+      var timeout = setTimeout(function() {
+        controller.abort();
+        isSearching = false;
+        updateSearchBtn(false);
+        reject(new Error('timeout'));
+      }, 60000);
+
+      var answer = '';
+      cloudFetch('/chat/completions', {
+        method: 'POST',
+        body: JSON.stringify({
+          model: currentModel.id,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: prompt }
+          ],
+          stream: true,
+          temperature: 0.8
+        }),
+        signal: controller.signal
+      }).then(function(res) {
+        if (!res.ok) return res.text().then(function(t) { throw new Error('HTTP ' + res.status + ': ' + t.substring(0, 200)); });
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder();
+        function read() {
+          reader.read().then(function(result) {
+            if (result.done) {
+              clearTimeout(timeout);
+              isSearching = false;
+              updateSearchBtn(false);
+              resolve(answer);
+              return;
+            }
+            var text = decoder.decode(result.value, { stream: true });
+            var lines = text.split('\n');
+            lines.forEach(function(line) {
+              if (line.startsWith('data:')) {
+                try {
+                  var obj = JSON.parse(line.substring(5).trim());
+                  var delta = obj.choices && obj.choices[0] ? obj.choices[0].delta : null;
+                  if (delta && delta.content) answer += delta.content;
+                } catch(e) {}
+              }
+            });
+            read();
+          }).catch(function(err) {
+            clearTimeout(timeout);
+            isSearching = false;
+            updateSearchBtn(false);
+            reject(err);
+          });
+        }
+        read();
+      }).catch(function(err) {
+        clearTimeout(timeout);
+        isSearching = false;
+        updateSearchBtn(false);
+        reject(err);
+      });
+    });
+  }
+
+  function updateSearchBtn(loading) {
+    var btn = document.getElementById('searchBtn');
+    btn.disabled = loading;
+    btn.textContent = loading ? '生成中…' : '搜一搜';
+  }
+
+  // --- Parse AI response ---
+  function parseResponse(text) {
+    text = text.trim();
+    var jsonMatch = text.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    try { return JSON.parse(jsonMatch[0]); } catch(e) { return null; }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // --- Render ---
+  function showLoading() {
+    document.getElementById('resultsArea').innerHTML =
+      '<div class="loading-area"><div class="loader"></div><div class="loading-text">AI 正在构思菜谱，请稍候...</div></div>';
+  }
+
+  function showError(msg) {
+    document.getElementById('resultsArea').innerHTML =
+      '<div class="error-msg">⚠️ ' + escapeHtml(msg) + '</div>' +
+      '<div class="empty-state"><div class="icon">🍽️</div><p>输入食材重新试试</p></div>';
+  }
+
+  function renderRecipes(recipes) {
+    clearUsedImages(); // 每批新菜谱，重置图片复用记录
+    var area = document.getElementById('resultsArea');
+    if (!recipes || recipes.length === 0) {
+      area.innerHTML = '<div class="empty-state"><div class="icon">🤷</div><p>没找到相关菜谱，换个关键词试试吧</p></div>';
+      return;
+    }
+    var html = '<div class="results-header">' +
+      '<span class="results-title">推荐菜谱</span>' +
+      '<span class="results-count">共 ' + recipes.length + ' 道</span>' +
+      '</div>';
+    recipes.forEach(function(r, i) {
+      var img = getPlaceholder(r.title || r.description || '');
+      _usedImgIndices.push(img); // 记录已用图片，防止重复
+      var tagsHtml = (r.tags || []).map(function(t) {
+        return '<span class="card-tag">' + escapeHtml(t) + '</span>';
+      }).join('');
+      var ingSummary = (r.ingredients || []).slice(0, 4).map(function(ing) {
+        return escapeHtml(ing.name) + (ing.amount ? ' ' + escapeHtml(ing.amount) : '');
+      }).join('、');
+      html += '<div class="recipe-card" onclick="__openRecipe(' + i + ')">' +
+        '<div class="card-top">' +
+          '<div class="card-img" style="background-image:url(\'' + img + '\')"></div>' +
+          '<div class="card-body">' +
+            '<div class="card-title">' + escapeHtml(r.title || '美味菜谱') + '</div>' +
+            '<div class="card-desc">' + escapeHtml(r.description || '') + '</div>' +
+            '<div class="card-meta">' +
+              '<span class="meta-item">⏱ ' + escapeHtml(r.time || '') + '</span>' +
+              '<span class="meta-item">📊 ' + escapeHtml(r.difficulty || '') + '</span>' +
+              '<span class="meta-item">🍽 ' + escapeHtml(r.portions || '') + '</span>' +
+            '</div>' +
+            '<div style="font-size:12px;color:var(--gray-light);margin-top:4px">主要食材：' + escapeHtml(ingSummary) + (r.ingredients && r.ingredients.length > 4 ? ' 等' : '') + '</div>' +
+            '<div class="card-tags" style="margin-top:8px">' + tagsHtml + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    window.__recipes = recipes;
+    area.innerHTML = html;
+  }
+
+  window.__openRecipe = function(index) {
+    var r = window.__recipes[index];
+    if (!r) return;
+    document.getElementById('modalTitle').textContent = r.title || '菜谱';
+    document.getElementById('modalHero').style.backgroundImage = 'url(\'' + getPlaceholder(r.title || '') + '\')';
+    var statsHtml = '';
+    if (r.time) statsHtml += '<span class="stat-pill">⏱ ' + escapeHtml(r.time) + '</span>';
+    if (r.difficulty) statsHtml += '<span class="stat-pill">📊 ' + escapeHtml(r.difficulty) + '</span>';
+    if (r.portions) statsHtml += '<span class="stat-pill">🍽 ' + escapeHtml(r.portions) + '</span>';
+    document.getElementById('modalStats').innerHTML = statsHtml;
+    var ingHtml = (r.ingredients || []).map(function(ing) {
+      return '<div class="ingredient-item">' + escapeHtml(ing.name) + (ing.amount ? ' · ' + escapeHtml(ing.amount) : '') + '</div>';
+    }).join('');
+    document.getElementById('modalIngredients').innerHTML = ingHtml;
+    var stepsHtml = (r.steps || []).map(function(s, i) {
+      return '<li><span class="step-num">' + (i+1) + '</span><span>' + escapeHtml(s) + '</span></li>';
+    }).join('');
+    document.getElementById('modalSteps').innerHTML = stepsHtml;
+    var tipsEl = document.getElementById('modalTipsSection');
+    if (r.tips) { tipsEl.style.display = 'block'; document.getElementById('modalTips').textContent = r.tips; }
+    else { tipsEl.style.display = 'none'; }
+    document.getElementById('modalOverlay').classList.add('open');
+  };
+
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === document.getElementById('modalOverlay')) {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+  });
+  document.getElementById('modalClose').addEventListener('click', function() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  });
+
+  // --- Search ---
+  function doSearch() {
+    var query = document.getElementById('searchInput').value.trim();
+    if (!query) { document.getElementById('searchInput').focus(); return; }
+    var tagFilter = Array.from(selectedTags).join(',');
+    var prompt = '请为以下需求生成菜谱：\n食材/关键词：' + query;
+    if (tagFilter) prompt += '\n类型偏好：' + tagFilter;
+    prompt += '\n请直接输出JSON';
+
+    showLoading();
+    llmChat(prompt).then(function(raw) {
+      var parsed = parseResponse(raw);
+      if (!parsed) {
+        showError('AI 返回格式异常，请重试');
+        return;
+      }
+      var recipes = Array.isArray(parsed) ? parsed : [parsed];
+      renderRecipes(recipes);
+    }).catch(function(err) {
+      var msg = '请求失败';
+      if (err.message && err.message.indexOf('timeout') !== -1) msg = '生成超时，请稍后重试';
+      else if (err.message && err.message.indexOf('repeat') !== -1) return;
+      else if (err.message) msg = err.message.substring(0, 100);
+      showError(msg);
+    });
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+  document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doSearch();
+  });
+
+  // Tags
+  document.getElementById('tagsContainer').addEventListener('click', function(e) {
+    var tag = e.target.closest('.tag');
+    if (!tag) return;
+    var v = tag.dataset.v;
+    if (selectedTags.has(v)) { selectedTags.delete(v); tag.classList.remove('active'); }
+    else { selectedTags.add(v); tag.classList.add('active'); }
+  });
+
+  // Quick chips
+  document.querySelectorAll('.quick-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.getElementById('searchInput').value = chip.dataset.q;
+      doSearch();
+    });
+  });
+
+  // Start
+  init();
+})();
+</script>
+</body>
+</html>
